@@ -1,8 +1,6 @@
 venv/
 __pycache__/
 .pytest_cache/
-*.db
-*.png
 *.zip
 *.ipynb_checkpoints/
 .DS_Store
