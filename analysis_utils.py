@@ -1,5 +1,8 @@
 import pandas as pd
 import sqlite3
+import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.ticker as ticker
 
 def load_and_clean_data(filepath: str) -> pd.DataFrame:
     df = pd.read_csv(filepath, encoding='utf-8', sep=',')
@@ -56,3 +59,44 @@ def save_to_sqlite(results: dict, db_path: str):
         conn.close()
     except Exception as e:
         print(f"Error al guardar en la base de datos: {e}")
+
+def monthly_graph_generator(monthly_revenue: pd.DataFrame, output_path: str):
+    plt.figure(figsize=(12, 7))
+    ax = sns.barplot(data=monthly_revenue, x='month_str', y='total', palette='viridis')
+
+    # Formato del gráfico
+    # Etiquetas de datos sobre las barras
+    for p in ax.patches:
+        height = p.get_height()
+        ax.annotate(f'{height:,.0f}',
+                    (p.get_x() + p.get_width() / 2., height),
+                    ha='center', va='center',
+                    xytext=(0, 9),
+                    textcoords='offset points')
+
+    # Formato de números en miles y millones
+    def format_millions(y, _):
+        if y >= 1e6:
+            return f'{y/1e6:,.1f}M'
+        elif y >= 1e3:
+            return f'{y/1e3:,.0f}K'
+        else:
+            return f'{y:,.0f}'
+
+    formatter = ticker.FuncFormatter(format_millions)
+    ax.yaxis.set_major_formatter(formatter)
+
+    # Etiquetas y título
+    plt.title("Facturación Total Mensual", fontsize=24, weight='bold', pad=20)
+    plt.xlabel("Mes", fontsize=16)
+    plt.ylabel("Facturación Total", fontsize=16)
+
+    sns.despine(left=True)
+    ax.tick_params(axis='y', which='both', left=False)
+    plt.tight_layout()
+    
+    try:
+        plt.savefig(output_path)
+        print(f"Gráfico guardado exitosamente en '{output_path}'")
+    except Exception as e:
+        print(f"Error al guardar el gráfico: {e}")
